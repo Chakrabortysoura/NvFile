@@ -14,9 +14,9 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch msg.String() {
-			case "j", "up":
+			case "j", "down":
 				m.cursor = (m.cursor + 1) % len(m.dirContents)
-			case "k", "down":
+			case "k", "up":
 				m.cursor -= 1
 				if m.cursor < 0 {
 					m.cursor = len(m.dirContents) - 1
