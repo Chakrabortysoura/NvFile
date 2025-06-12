@@ -1,0 +1,34 @@
+name: Workflow to build the go binary
+run-name: Building the Go binary
+on:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest ## the Linux env being used to compile the binary
+    steps:
+      - name: Fetch the Code
+        uses: actions/checkout@v3
+
+      - name: Set up the Go environment
+        uses: actions/setup-go@v5.5.0
+        with:
+          go-version-file: go.mod
+
+      - name: Installing dependencies
+        run: go mod download
+
+      - name: Build the Final Binary
+        run: go build -o NvFile
+
+      - name: Create a Release and upload the go binary to the Release
+        id: create-release
+        uses: ncipollo/release-action@v1.16.0
+        with:
+          artifacts: "NvFile"
+          bodyFile: "Release.txt"
+          tag: ${{ github.ref_name }} ##This is used to define the release name
+          allowUpdates: 'true'

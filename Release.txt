@@ -1,0 +1,2 @@
+Initial releas before v1.0. Still requires some work in fixing the ui elements and centralized configuratioin file integration. Most of the basic file explorer features are working
+perfectly and the binary currently works with nvim.
