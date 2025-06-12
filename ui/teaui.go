@@ -8,10 +8,10 @@ import (
 
 var (
 	outsidewindow = lipgloss.NewStyle().Align(lipgloss.Left).Border(lipgloss.RoundedBorder()).MarginBottom(1)
-	currDir       = lipgloss.NewStyle().Align(lipgloss.Left).Background(lipgloss.Color("#ad0e00")).Bold(true).Foreground(lipgloss.Color("#0a0a0a"))
-	bottomSecond  = lipgloss.NewStyle().Width(60).Align(lipgloss.Left).Background(lipgloss.Color("#db7535")).Foreground(lipgloss.Color("#0a0a0a"))
-	dirRender     = lipgloss.NewStyle().Align(lipgloss.Center).Background(lipgloss.Color("#545755"))
-	errorRender   = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#ff0033")).MarginTop(1)
+	currDir       = lipgloss.NewStyle().Align(lipgloss.Left).Bold(true).Foreground(lipgloss.Color("#0a0a0a"))
+	bottomSecond  = lipgloss.NewStyle().Width(60).Align(lipgloss.Left).Background(lipgloss.Color(configData["bottombarSecond"][0])).Foreground(lipgloss.Color("#0a0a0a"))
+	dirRender     = lipgloss.NewStyle().Align(lipgloss.Center).Background(lipgloss.Color(configData["dirColor"][0]))
+	errorRender   = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color(configData["errorColor"][0])).MarginTop(1)
 )
 
 func (m DirContentModel) Init() tea.Cmd {

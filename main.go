@@ -15,6 +15,13 @@ func main() {
 		fmt.Println("Error reaching the currently working directory.")
 		os.Exit(1)
 	}
+	configfile, err := os.Open("config.json")
+	if os.IsNotExist(err) {
+		ui.CreateInitialConfig()
+	} else {
+		ui.ReadConfig()
+		configfile.Close()
+	}
 	var model = ui.InitModel(basedir)
 	if _, err := tea.NewProgram(model).Run(); err != nil {
 		fmt.Println("Error starting the programme: " + err.Error())
