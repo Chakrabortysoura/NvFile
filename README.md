@@ -7,7 +7,8 @@ NvFile is a TUI file explorer that works with your terminal text/code editors li
 
 ## Demo
 Deleting file or subdirectories- 
-![ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/3568be62-db0d-4ab3-ab7c-7371417727af)
+![ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/27f2faa0-d109-473a-bb25-a07347d89b4e)
+
 
 ## Useful Keyboard Shortcuts
 
