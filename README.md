@@ -6,6 +6,7 @@ NvFile is a TUI file explorer that works with your terminal text/code editors li
 
 
 ## Demo
+
 Deleting file or subdirectories- 
 ![ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/27f2faa0-d109-473a-bb25-a07347d89b4e)
 
@@ -61,7 +62,7 @@ Deleting file or subdirectories-
 This project is being actively developed. Currently features on the roadmap -
 
 - More optimization in bubble tea tui interface for dynamic window sizing. 
-- A json configuration file to define keyboard shortcut and theme colors
+- A json configuration file to define keyboard shortcuts.
 - Integration with other terminal vased text/code editor such as nano and gedit through the aforementioned config file.
 
 ## Be sure to Checkout 
