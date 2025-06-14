@@ -24,11 +24,6 @@ type DirContentModel struct {
 	errormsg    string
 }
 
-func initBasePath(basepath string) []string {
-	return strings.Split(basepath, "/") // Takes the initial base directory where the application is being launched and splits whole string
-	//  and forms a stack from the base directory address
-}
-
 func readdircontents(path string, mode bool) []fs.FileInfo {
 	// Reads the directory contents from the path provided, returns the details of each element
 	basedir, err := os.Open(path)
@@ -53,7 +48,7 @@ func readdircontents(path string, mode bool) []fs.FileInfo {
 func InitModel(basedir string) DirContentModel {
 	//Initializes the base model for directory navigation
 	result := DirContentModel{
-		pathStack:   initBasePath(basedir), // Stores the basedir path in the form of stack
+		pathStack:   strings.Split(basedir, "/"), // Stores the basedir path in the form of stack
 		dirContents: make([]fs.FileInfo, 0),
 		cursor:      -1,
 		mode:        0,
@@ -67,15 +62,10 @@ func InitModel(basedir string) DirContentModel {
 
 func (m *DirContentModel) GoForward(childFolder string) {
 	m.pathStack = append(m.pathStack, childFolder) // Equivalent to stack push
-	m.dirContents = readdircontents(m.BasePath(), m.hiddenFile)
+	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
 }
 
 func (m *DirContentModel) GoBack() {
 	m.pathStack = m.pathStack[:len(m.pathStack)-1] // Equivalent to stack pop
-	m.dirContents = readdircontents(m.BasePath(), m.hiddenFile)
-}
-
-func (m *DirContentModel) BasePath() string {
-	// Function to concatenate the path from the stack and change the currently viewing directory
-	return strings.Join(m.pathStack, "/") + "/"
+	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
 }

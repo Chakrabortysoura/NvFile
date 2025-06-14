@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"slices"
+	"strings"
 )
 
 func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -36,7 +37,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							os.Exit(3)
 						}
 						os.Stdin = tty
-						cmd := exec.Command("nvim", m.BasePath()+m.dirContents[m.cursor].Name())
+						cmd := exec.Command("nvim", strings.Join(m.pathStack, "/")+"/"+m.dirContents[m.cursor].Name())
 						cmd.Stdin = tty
 						cmd.Stderr = os.Stderr
 						cmd.Stdout = os.Stdout
@@ -48,7 +49,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "ctrl+h":
 				m.hiddenFile = !m.hiddenFile
-				m.dirContents = readdircontents(m.BasePath(), m.hiddenFile)
+				m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
 			case "ctrl+n": // Switches the application state to new file creation mode
 				m.mode = 1
 				return m, tea.ShowCursor
@@ -69,7 +70,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "enter": // End the current filename input
 				defer m.inputfield.SetValue("") //Clear the inputfield after the operation is done
-				newFile, err := os.Create(m.BasePath() + m.inputfield.Value())
+				newFile, err := os.Create(strings.Join(m.pathStack, "/") + "/" + m.inputfield.Value())
 				if err != nil {
 					m.errormsg = err.Error() //Failed to create file
 					return m, nil
@@ -100,12 +101,12 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "enter": // Ends the current dirname input
 				defer m.inputfield.SetValue("") //Clear the inputfield after the operation is done
-				err := os.Mkdir(m.BasePath()+m.inputfield.Value(), 0660)
+				err := os.Mkdir(strings.Join(m.pathStack, "/")+"/"+m.inputfield.Value(), 0660)
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
 				}
-				newDir, err := os.Open(m.BasePath() + m.inputfield.Value())
+				newDir, err := os.Open(strings.Join(m.pathStack, "/") + "/" + m.inputfield.Value())
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
@@ -135,7 +136,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "y", "Y": // The selected element with the cursor gets deleted
-				if err := os.RemoveAll(m.BasePath() + m.dirContents[m.cursor].Name()); err != nil {
+				if err := os.RemoveAll(strings.Join(m.pathStack, "/") + "/" + m.dirContents[m.cursor].Name()); err != nil {
 					m.errormsg = "Unable Delete the selected item."
 				}
 				m.dirContents = slices.Delete(m.dirContents, m.cursor, m.cursor+1) // Removes the deleted file or directory from directory contents list

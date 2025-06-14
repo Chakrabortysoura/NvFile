@@ -9,10 +9,10 @@ import (
 
 var (
 	configData = map[string][]string{
-		"bottombarFirst":  []string{"#ad0e00"},
-		"bottombarSecond": []string{"#db7535"},
-		"dirColor":        []string{"#545755"},
-		"errorColor":      []string{"#ff0033"},
+		"bottombarFirst":  {"#ad0e00"},
+		"bottombarSecond": {"#db7535"},
+		"dirColor":        {"#545755"},
+		"errorColor":      {"#ff0033"},
 	}
 )
 

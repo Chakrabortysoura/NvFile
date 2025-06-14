@@ -49,6 +49,6 @@ func (m DirContentModel) View() string {
 		m.errormsg = ""
 	}
 	upperBorder := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false, false, false)
-	result.WriteString(upperBorder.Render(currDir.Render("DIR ") + bottomSecond.Render(" "+m.BasePath())))
+	result.WriteString(upperBorder.Render(currDir.Render("DIR ") + bottomSecond.Render(" "+strings.Join(m.pathStack, "/")+"/")))
 	return outsidewindow.Render(result.String())
 }
