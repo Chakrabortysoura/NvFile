@@ -42,6 +42,7 @@ func InitColorConfig() {
 		if err != nil {
 			fmt.Println("Unable to create a new colorconfig file")
 		}
+		return
 	}
 	defer configfile.Close()
 	decoder := json.NewDecoder(configfile) //Reads the json config data from the colorconfig file
