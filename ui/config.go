@@ -14,45 +14,46 @@ var (
 		"dirColor":        {"#545755"},
 		"errorColor":      {"#ff0033"},
 	}
+	//keybindconfig = map[string][]string{
+	//	"toggleHiddenFile": {"ctrl+h"},
+	//	"down":             {"j", "down"},
+	//	"up":               {"k", "up"},
+	//	"newDile":          {"ctrl+n"},
+	//	"newSubDir":        {"ctrl+d"},
+	//	"goBack":           {"ctrl+b", "backspace"},
+	//	"deleteFileorDir":  {"delete"},
+	//	"exit":             {"ctrl+z", "ctrl+q"},
+	//}
 )
 
-func CreateInitialConfig() {
-	//Create the initial config file(if already doesn't exist) for the initial settings
-	configFile, err := os.Create("config.json")
-	if err != nil {
-		fmt.Println("Config file creation failed")
-		os.Exit(3)
+func InitColorConfig() {
+	//Opens the colorconfig file and reads the color config data from it
+	configfile, err := os.Open("colorconfig.json")
+	if os.IsNotExist(err) {
+		//If no colorconfig.json file exists then create a new config file and put the default
+		//json encoded config data in it
+		newconfigfile, err := os.Create("colorconfig.json")
+		if err != nil {
+			fmt.Println("Unable to create a new colorconfig file")
+		}
+		defer newconfigfile.Close()
+		encoder := json.NewEncoder(newconfigfile)
+		err = encoder.Encode(configData)
+		if err != nil {
+			fmt.Println("Unable to create a new colorconfig file")
+		}
 	}
-	encoder := json.NewEncoder(configFile)
-	err = encoder.Encode(configData)
-	if err != nil {
-		fmt.Println("Json Encoding failed for initial config")
-	}
-	//Initialized the ui component renders with the color cofig data
-	currDir = currDir.Background(lipgloss.Color(configData["bottombarFirst"][0]))
-	bottomSecond = bottomSecond.Background(lipgloss.Color(configData["bottombarSecond"][0]))
-	errorRender = errorRender.Background(lipgloss.Color(configData["errorColor"][0]))
-	dirRender = dirRender.Background(lipgloss.Color(configData["dirColor"][0]))
-}
-
-func ReadConfig() string {
-	configFile, err := os.Open("config.json")
-	if err != nil {
-		fmt.Println("Config file read failed.Check if the config file exists in the correct path.")
-		os.Exit(3)
-	}
-	defer configFile.Close()
-	decoder := json.NewDecoder(configFile)
+	defer configfile.Close()
+	decoder := json.NewDecoder(configfile) //Reads the json config data from the colorconfig file
 	err = decoder.Decode(&configData)
 	if err != nil {
-		fmt.Println("Json Decoding failed for initial config. Check if the config file is formatted correctly")
+		fmt.Println("Unable to read from the colorconfig file")
 	}
 
-	//Initialized the ui component renders with the color cofig data
+	//Initialized the ui component renders with the new color cofig data
+	//after reading from config file
 	currDir = currDir.Background(lipgloss.Color(configData["bottombarFirst"][0]))
 	bottomSecond = bottomSecond.Background(lipgloss.Color(configData["bottombarSecond"][0]))
 	errorRender = errorRender.Background(lipgloss.Color(configData["errorColor"][0]))
 	dirRender = dirRender.Background(lipgloss.Color(configData["dirColor"][0]))
-
-	return fmt.Sprintf("%v", configData) // Return the data read from the config json file
 }

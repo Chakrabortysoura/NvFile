@@ -29,16 +29,7 @@ func main() {
 			basedir = os.Args[1]
 		}
 	}
-	configfile, err := os.Open("config.json")
-	if os.IsNotExist(err) {
-		ui.CreateInitialConfig()
-	} else if err != nil {
-		fmt.Println("Error in opening the config file: " + err.Error())
-		os.Exit(3)
-	} else {
-		ui.ReadConfig()
-		configfile.Close()
-	}
+	ui.InitColorConfig()
 	var model = ui.InitModel(basedir)
 	if _, err := tea.NewProgram(model).Run(); err != nil {
 		fmt.Println("Error starting the programme: " + err.Error())

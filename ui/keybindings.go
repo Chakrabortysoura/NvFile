@@ -56,9 +56,9 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "ctrl+d": // Switches the application state to new file directory mode
 				m.mode = 2
 				return m, tea.ShowCursor
-			case "ctrl+b", tea.KeyBackspace.String(): // go back to the parent directory of the current base path
+			case "ctrl+b", "backspace": // go back to the parent directory of the current base path
 				m.GoBack()
-			case tea.KeyDelete.String():
+			case "delete":
 				m.mode = 3
 			case "ctrl+q", "ctrl+z":
 				return m, tea.Quit
