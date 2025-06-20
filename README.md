@@ -31,6 +31,12 @@ Deleting file or subdirectories-
   ctrl+d
 ```
 
+#### Delete subdirectory or File
+
+```http
+  delete
+```
+
 #### Toggle between showing and not showing hidden files
 
 ```http
@@ -50,7 +56,7 @@ Deleting file or subdirectories-
 #### Quit creating a new file or subdirectory
 
 ```http
-  backspace, ctrl+b
+  ctrl+b
 ```
 #### Quit NvFile
 
