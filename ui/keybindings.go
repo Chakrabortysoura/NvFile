@@ -10,19 +10,22 @@ import (
 )
 
 func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Incoming special keyboard shortcuts are matched against the predefined keyboard shortcuts
+	// if the pressed keyboard input matches with a specific keybind specific actio is taken.
+	// This allows for user defined keyboard shortcuts defined through config file.
 	switch m.mode {
 	case 0: // Application is in view mode
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
-			switch msg.String() {
-			case "j", "down":
+			switch {
+			case slices.Contains(keybindconfig["down"], msg.String()):
 				m.cursor = (m.cursor + 1) % len(m.dirContents)
-			case "k", "up":
+			case slices.Contains(keybindconfig["up"], msg.String()):
 				m.cursor -= 1
 				if m.cursor < 0 {
 					m.cursor = len(m.dirContents) - 1
 				}
-			case "enter": // Enters the selected subdirectory or opens the selected file in nvim
+			case slices.Contains(keybindconfig["action"], msg.String()): // Enters the selected subdirectory or opens the selected file in nvim
 				if m.cursor != -1 {
 					if m.dirContents[m.cursor].IsDir() {
 						m.GoForward(m.dirContents[m.cursor].Name())
@@ -47,28 +50,28 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						}
 					}
 				}
-			case "ctrl+h":
+			case slices.Contains(keybindconfig["togglehiddenfile"], msg.String()): //Toggle between showing and not showing hidden file or subdir
 				m.hiddenFile = !m.hiddenFile
 				m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
-			case "ctrl+n": // Switches the application state to new file creation mode
+			case slices.Contains(keybindconfig["newfile"], msg.String()): // Switches the application state to new file creation mode
 				m.mode = 1
 				return m, tea.ShowCursor
-			case "ctrl+d": // Switches the application state to new file directory mode
+			case slices.Contains(keybindconfig["newsubdir"], msg.String()): // Switches the application state to new file directory mode
 				m.mode = 2
 				return m, tea.ShowCursor
-			case "ctrl+b", "backspace": // go back to the parent directory of the current base path
+			case slices.Contains(keybindconfig["goback"], msg.String()): // go back to the parent directory of the current base path
 				m.GoBack()
-			case "delete":
+			case slices.Contains(keybindconfig["deletefileordir"], msg.String()):
 				m.mode = 3
-			case "ctrl+q", "ctrl+z":
+			case slices.Contains(keybindconfig["exit"], msg.String()):
 				return m, tea.Quit
 			}
 		}
 	case 1: // App is in first mode(Creating a new file in the directory)
 		switch msg := msg.(type) {
 		case tea.KeyMsg: // Ends the current filename input
-			switch msg.String() {
-			case "enter": // End the current filename input
+			switch {
+			case slices.Contains(keybindconfig["action"], msg.String()): // End the current filename input
 				defer m.inputfield.SetValue("") //Clear the inputfield after the operation is done
 				newFile, err := os.Create(strings.Join(m.pathStack, "/") + "/" + m.inputfield.Value())
 				if err != nil {
@@ -82,11 +85,11 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.dirContents = append(m.dirContents, newFileInfo)
 				m.mode = 0
-			case "ctrl+b": // go back to  view mode cancel the file creation
+			case slices.Contains(keybindconfig["goback"], msg.String()): // go back to view mode cancel the file creation
 				m.inputfield.SetValue("")
 				m.mode = 0
 				return m, nil
-			case "ctrl+q", "ctrl+z": //Quit the programme
+			case slices.Contains(keybindconfig["exit"], msg.String()): //Quit the programme
 				return m, tea.Quit
 			default:
 				var cmd tea.Cmd
@@ -98,8 +101,8 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case 2: // App is in second mode(Creating a new sub-directory in the directory)
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
-			switch msg.String() {
-			case "enter": // Ends the current dirname input
+			switch {
+			case slices.Contains(keybindconfig["enter"], msg.String()): // Ends the current dirname input
 				defer m.inputfield.SetValue("") //Clear the inputfield after the operation is done
 				err := os.Mkdir(strings.Join(m.pathStack, "/")+"/"+m.inputfield.Value(), 0660)
 				if err != nil {
@@ -118,11 +121,11 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.dirContents = append(m.dirContents, newDirInfo)
 				m.mode = 0
-			case "ctrl+b": // go back to  view mode cancel the file creation
+			case slices.Contains(keybindconfig["goback"], msg.String()): // go back to  view mode cancel the file creation
 				m.inputfield.SetValue("")
 				m.mode = 0
 				return m, nil
-			case "ctrl+q", "ctrl+z": //Quit the programme
+			case slices.Contains(keybindconfig["exit"], msg.String()): //Quit the programme
 				return m, tea.Quit
 			default:
 				var cmd tea.Cmd
