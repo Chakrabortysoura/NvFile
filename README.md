@@ -65,11 +65,9 @@ Deleting file or subdirectories-
 ```
 ## Development Roadmap
 
-This project is being actively developed. Currently features on the roadmap -
+This project is being actively developed. Current features on the roadmap -
 
-- More optimization in bubble tea tui interface for dynamic window sizing. 
-- A json configuration file to define keyboard shortcuts.
-- Integration with other terminal vased text/code editor such as nano and gedit through the aforementioned config file.
+- More optimization in bubble tea tui interface for dynamic window sizing.
 
 ## Be sure to Checkout 
 
