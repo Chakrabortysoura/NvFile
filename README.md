@@ -68,6 +68,8 @@ Deleting file or subdirectories-
 This project is being actively developed. Current features on the roadmap -
 
 - More optimization in bubble tea tui interface for dynamic window sizing.
+- Search functionality in view mode.
+- A small preview window side by side for files and subdirectories.
 
 ## Be sure to Checkout 
 
