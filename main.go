@@ -6,7 +6,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"os"
 	"strings"
-	"sync"
 )
 
 // This a Tui File explorer written in go for using with Neovim as kinda aa simple replacement for nvim own file explorer's.
@@ -30,13 +29,7 @@ func main() {
 			basedir = os.Args[1]
 		}
 	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(2)
-	go ui.InitColorConfig(&wg)
-	go ui.InitKeyConfig(&wg)
-	wg.Wait()
-
+	ui.InitConfig()
 	var model = ui.InitModel(basedir)
 	if _, err := tea.NewProgram(model).Run(); err != nil {
 		fmt.Println("Error starting the programme: " + err.Error())
