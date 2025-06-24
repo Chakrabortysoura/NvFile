@@ -19,16 +19,17 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch {
 			case slices.Contains(configData["down"], msg.String()):
-				m.cursor = (m.cursor + 1) % len(m.dirContents)
+				m.cursor = (m.cursor + 1) % len(m.searchResults)
 			case slices.Contains(configData["up"], msg.String()):
 				m.cursor -= 1
 				if m.cursor < 0 {
-					m.cursor = len(m.dirContents) - 1
+					m.cursor = len(m.searchResults) - 1
 				}
 			case slices.Contains(configData["action"], msg.String()): // Enters the selected subdirectory or opens the selected file in nvim
 				if m.cursor != -1 {
-					if m.dirContents[m.cursor].IsDir() {
-						m.GoForward(m.dirContents[m.cursor].Name())
+					if m.searchResults[m.cursor].IsDir() {
+						m.searchfield.Reset()
+						m.goForward(m.searchResults[m.cursor].Name())
 					} else {
 						// This next block of code is to acquire a new stdin file descriptor for Neovim
 						// Attach this file descriptor as stdin for neovim
@@ -60,9 +61,12 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.mode = 2
 				return m, tea.ShowCursor
 			case slices.Contains(configData["goback"], msg.String()): // go back to the parent directory of the current base path
-				m.GoBack()
+				m.searchfield.Reset()
+				m.goBack()
 			case slices.Contains(configData["deletefileordir"], msg.String()):
 				m.mode = 3
+			case strings.Compare("ctrl+f", msg.String()) == 0:
+				m.mode = 4
 			case slices.Contains(configData["exit"], msg.String()):
 				return m, tea.Quit
 			}
@@ -72,7 +76,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg: // Ends the current filename input
 			switch {
 			case slices.Contains(configData["action"], msg.String()): // End the current filename input
-				defer m.inputfield.SetValue("") //Clear the inputfield after the operation is done
+				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
 				newFile, err := os.Create(strings.Join(m.pathStack, "/") + "/" + m.inputfield.Value())
 				if err != nil {
 					m.errormsg = err.Error() //Failed to create file
@@ -86,7 +90,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.dirContents = append(m.dirContents, newFileInfo)
 				m.mode = 0
 			case slices.Contains(configData["goback"], msg.String()): // go back to view mode cancel the file creation
-				m.inputfield.SetValue("")
+				m.inputfield.Reset()
 				m.mode = 0
 				return m, nil
 			case slices.Contains(configData["exit"], msg.String()): //Quit the programme
@@ -102,8 +106,8 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch {
-			case slices.Contains(configData["enter"], msg.String()): // Ends the current dirname input
-				defer m.inputfield.SetValue("") //Clear the inputfield after the operation is done
+			case slices.Contains(configData["action"], msg.String()): // Ends the current dirname input
+				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
 				err := os.Mkdir(strings.Join(m.pathStack, "/")+"/"+m.inputfield.Value(), 0660)
 				if err != nil {
 					m.errormsg = err.Error()
@@ -122,7 +126,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.dirContents = append(m.dirContents, newDirInfo)
 				m.mode = 0
 			case slices.Contains(configData["goback"], msg.String()): // go back to  view mode cancel the file creation
-				m.inputfield.SetValue("")
+				m.inputfield.Reset()
 				m.mode = 0
 				return m, nil
 			case slices.Contains(configData["exit"], msg.String()): //Quit the programme
@@ -146,6 +150,21 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.mode = 0
 			case "n", "N": // Returns to view mode
 				m.mode = 0
+			}
+		}
+	case 4: // Application is in search mode
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch {
+			case slices.Contains(configData["goback"], msg.String()):
+				m.cursor = -1
+				m.mode = 0
+			default:
+				var cmd tea.Cmd
+				m.searchfield.Focus()
+				m.searchfield, cmd = m.searchfield.Update(msg)
+				m.updatesearchresult()
+				return m, tea.Batch(cmd, tea.ShowCursor)
 			}
 		}
 	}

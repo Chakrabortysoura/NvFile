@@ -12,6 +12,8 @@ var (
 	bottomSecond  = lipgloss.NewStyle().Width(60).Align(lipgloss.Left).Background(lipgloss.Color(configData["bottombarSecond"][0])).Foreground(lipgloss.Color("#0a0a0a"))
 	dirRender     = lipgloss.NewStyle().Align(lipgloss.Center).Background(lipgloss.Color(configData["dirColor"][0]))
 	errorRender   = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color(configData["errorColor"][0])).MarginTop(1)
+	upperBorder   = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false, false, false)
+	promptRender  = lipgloss.NewStyle().Align(lipgloss.Left)
 )
 
 func (m DirContentModel) Init() tea.Cmd {
@@ -20,7 +22,7 @@ func (m DirContentModel) Init() tea.Cmd {
 
 func (m DirContentModel) View() string {
 	var result strings.Builder
-	for i, contents := range m.dirContents {
+	for i, contents := range m.searchResults {
 		if m.cursor == i {
 			result.WriteString(">")
 		} else {
@@ -34,21 +36,22 @@ func (m DirContentModel) View() string {
 		result.WriteString("\n")
 	}
 	if m.mode == 1 {
-		result.WriteString("New File Name: " + m.inputfield.View() + "\n")
+		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("New File Name:") + m.inputfield.View() + "\n")
 	} else if m.mode == 2 {
-		result.WriteString("New Sub-Directory Name: " + m.inputfield.View() + "\n")
+		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("New Sub-Directory Name:") + m.inputfield.View() + "\n")
 	} else if m.mode == 3 {
 		if m.dirContents[m.cursor].IsDir() {
-			result.WriteString("Delete the Directory '" + m.dirContents[m.cursor].Name() + "'? (y/N)\n")
+			result.WriteString(promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the Directory '") + m.dirContents[m.cursor].Name() + "'? (y/n)\n")
 		} else {
-			result.WriteString("Delete the File '" + m.dirContents[m.cursor].Name() + "'? (y/N)\n")
+			result.WriteString(promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the File '") + m.dirContents[m.cursor].Name() + "'? (y/n)\n")
 		}
+	} else if m.mode == 4 {
+		result.WriteString(promptRender.Background(lipgloss.Color("")).Render("Search: ") + m.searchfield.View() + "\n")
 	}
 	if m.errormsg != "" {
 		result.WriteString(errorRender.Render(m.errormsg) + "\n")
 		m.errormsg = ""
 	}
-	upperBorder := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false, false, false)
 	result.WriteString(upperBorder.Render(currDir.Render("DIR ") + bottomSecond.Render(" "+strings.Join(m.pathStack, "/")+"/")))
 	return outsidewindow.Render(result.String())
 }

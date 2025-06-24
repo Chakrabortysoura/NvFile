@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// This a Tui File explorer written in go for using with Neovim as kinda aa simple replacement for nvim own file explorer's.
+// This a Tui File explorer written in go for using with Neovim as a simple replacement for nvim's own file explorer's.
 // Removes the hassle of setting up nvtree
 func main() {
 	basedir, err := os.Getwd()

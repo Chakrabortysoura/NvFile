@@ -18,7 +18,7 @@ var (
 		"up":               {"k", "up"},
 		"newfile":          {"ctrl+n"},
 		"newsubdir":        {"ctrl+d"},
-		"goback":           {"ctrl+b", "backspace"},
+		"goback":           {"ctrl+b"},
 		"deletefileordir":  {"delete"},
 		"exit":             {"ctrl+z", "ctrl+q"},
 		"action":           {"enter"},
