@@ -65,11 +65,12 @@ Deleting file or subdirectories-
 ```
 ## Development Roadmap
 
-This project is being actively developed. Current features on the roadmap -
+This projct has reached v1.0. All the necessary features have been implementated. 
+Some more useful optimizations that can be made are still in the works. Though  in the current state the programme is usable in any linux system with neovim. 
 
-- More optimization in bubble tea tui interface for dynamic window sizing.
-- Search functionality in view mode.
-- A small preview window side by side for files and subdirectories.
+Some smaller features on the development roadmap- 
+1. A seperate preview window for files and directories.
+2. Implementing fuzzy search in the search mode for better user experience. 
 
 ## Be sure to Checkout 
 
