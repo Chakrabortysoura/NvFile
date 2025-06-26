@@ -53,7 +53,7 @@ func InitModel(basedir string) DirContentModel {
 		pathStack:     strings.Split(basedir, "/"), // Stores the basedir path in the form of stack
 		dirContents:   nil,
 		searchResults: nil,
-		cursor:        -1,
+		cursor:        0,
 		mode:          0,
 		inputfield:    textinput.New(),
 		searchfield:   textinput.New(),
@@ -73,9 +73,14 @@ func InitModel(basedir string) DirContentModel {
 	return result
 }
 
+func (m *DirContentModel) getCurrentPath() string {
+	return strings.Join(m.pathStack, "/") + "/"
+}
+
 func (m *DirContentModel) goForward(childFolder string) {
 	m.pathStack = append(m.pathStack, childFolder) // Equivalent to stack push. Used to enter a subdirectory in the current directory
 	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
+	m.cursor = 0
 	m.updatesearchresult()
 }
 
@@ -84,15 +89,28 @@ func (m *DirContentModel) goBack() {
 		m.pathStack = m.pathStack[:len(m.pathStack)-1] // Equivalent to stack pop. Used to go back to parent directory of the current directory
 	}
 	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
+	m.cursor = 0
 	m.updatesearchresult()
 }
 
 func (m *DirContentModel) updatesearchresult() {
-	// Updates the results of the view list with respect to the search term
+	// Updates the results of the view list with respect to the current search term
 	m.searchResults = make([]fs.FileInfo, 0)
 	for _, content := range m.dirContents {
 		if strings.Contains(strings.ToLower(content.Name()), m.searchfield.Value()) {
 			m.searchResults = append(m.searchResults, content)
 		}
+	}
+}
+
+func (m *DirContentModel) calculateBottombarWidth() int {
+	//This function is to adjust the dynamic lengt of the bottom bar based on the state of the application
+	//This function checks whether the application has a txtinputwindow open and add that width of the bottombar
+	if m.mode == 0 {
+		return len(strings.Join(m.pathStack, "/") + "/   ")
+	} else if m.mode == 4 {
+		return len(strings.Join(m.pathStack, "/")+"/") + m.searchfield.Width
+	} else {
+		return len(strings.Join(m.pathStack, "/")+"/") + m.inputfield.Width
 	}
 }

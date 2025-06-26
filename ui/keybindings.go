@@ -41,7 +41,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							os.Exit(3)
 						}
 						os.Stdin = tty
-						cmd := exec.Command("nvim", strings.Join(m.pathStack, "/")+"/"+m.dirContents[m.cursor].Name())
+						cmd := exec.Command("nvim", m.getCurrentPath()+m.searchResults[m.cursor].Name())
 						cmd.Stdin = tty
 						cmd.Stderr = os.Stderr
 						cmd.Stdout = os.Stdout
@@ -53,7 +53,8 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case slices.Contains(configData["togglehiddenfile"], msg.String()): //Toggle between showing and not showing hidden file or subdir
 				m.hiddenFile = !m.hiddenFile
-				m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
+				m.dirContents = readdircontents(m.getCurrentPath(), m.hiddenFile)
+				m.searchResults = readdircontents(m.getCurrentPath(), m.hiddenFile)
 			case slices.Contains(configData["newfile"], msg.String()): // Switches the application state to new file creation mode
 				m.mode = 1
 				return m, tea.ShowCursor
@@ -77,7 +78,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch {
 			case slices.Contains(configData["action"], msg.String()): // End the current filename input
 				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
-				newFile, err := os.Create(strings.Join(m.pathStack, "/") + "/" + m.inputfield.Value())
+				newFile, err := os.Create(m.getCurrentPath() + m.inputfield.Value())
 				if err != nil {
 					m.errormsg = err.Error() //Failed to create file
 					return m, nil
@@ -87,8 +88,10 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.errormsg = err.Error() //Failed to obtain fileinfo of the newly created file
 					return m, nil
 				}
-				m.dirContents = append(m.dirContents, newFileInfo)
+				m.dirContents = append(m.dirContents, newFileInfo)     // Updates the contents of the dircontent list
+				m.searchResults = append(m.searchResults, newFileInfo) // Updates the contents of the searchlist list
 				m.mode = 0
+				m.cursor = 0
 			case slices.Contains(configData["goback"], msg.String()): // go back to view mode cancel the file creation
 				m.inputfield.Reset()
 				m.mode = 0
@@ -108,12 +111,12 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch {
 			case slices.Contains(configData["action"], msg.String()): // Ends the current dirname input
 				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
-				err := os.Mkdir(strings.Join(m.pathStack, "/")+"/"+m.inputfield.Value(), 0660)
+				err := os.Mkdir(m.getCurrentPath()+m.inputfield.Value(), 0660)
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
 				}
-				newDir, err := os.Open(strings.Join(m.pathStack, "/") + "/" + m.inputfield.Value())
+				newDir, err := os.Open(m.getCurrentPath() + m.inputfield.Value())
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
@@ -123,8 +126,10 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.errormsg = err.Error()
 					return m, nil
 				}
-				m.dirContents = append(m.dirContents, newDirInfo)
+				m.dirContents = append(m.dirContents, newDirInfo)     // Updates the contents of the dircontents list
+				m.searchResults = append(m.searchResults, newDirInfo) // Updates the contents of the searchlist list
 				m.mode = 0
+				m.cursor = 0
 			case slices.Contains(configData["goback"], msg.String()): // go back to  view mode cancel the file creation
 				m.inputfield.Reset()
 				m.mode = 0
@@ -143,21 +148,23 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "y", "Y": // The selected element with the cursor gets deleted
-				if err := os.RemoveAll(strings.Join(m.pathStack, "/") + "/" + m.dirContents[m.cursor].Name()); err != nil {
+				if err := os.RemoveAll(m.getCurrentPath() + m.dirContents[m.cursor].Name()); err != nil {
 					m.errormsg = "Unable Delete the selected item."
 				}
-				m.dirContents = slices.Delete(m.dirContents, m.cursor, m.cursor+1) // Removes the deleted file or directory from directory contents list
+				m.dirContents = slices.Delete(m.dirContents, m.cursor, m.cursor+1)     // Removes the deleted file or directory from directory contents list
+				m.searchResults = slices.Delete(m.searchResults, m.cursor, m.cursor+1) // Removes the deleted file or directory from search contents list
 				m.mode = 0
 			case "n", "N": // Returns to view mode
 				m.mode = 0
 			}
+			m.cursor = 0
 		}
 	case 4: // Application is in search mode
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch {
 			case slices.Contains(configData["goback"], msg.String()):
-				m.cursor = -1
+				m.cursor = 0
 				m.mode = 0
 			default:
 				var cmd tea.Cmd
