@@ -1,6 +1,5 @@
-Release- v1.0.1
+Release- v1.0.2
 
-(v1.0.1) All the baseline features mentioned in the roadmap have been implemented in this Release.
+(v1.0.2) All the baseline features mentioned in the roadmap have been implemented in this Release.
 Patches incude-
-1. Ui elements have been updated to adapt to contents and current state of the applicaiton.
-2. Addition of getCurrentPath() to get the current base path.
+1.Updated base directory path view when given as commmandline argument(Used to end with an extra '/')

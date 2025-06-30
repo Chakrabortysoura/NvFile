@@ -27,6 +27,9 @@ func main() {
 				os.Exit(3)
 			}
 			basedir = os.Args[1]
+			if basedir[len(basedir)-1] == '/' {
+				basedir = basedir[:len(basedir)-1]
+			}
 		}
 	}
 	ui.InitConfig()
