@@ -170,7 +170,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var cmd tea.Cmd
 				m.searchfield.Focus()
 				m.searchfield, cmd = m.searchfield.Update(msg)
-				m.updatesearchresult()
+				m.updatesearchresult() //Filter the viewlist with the current searchterm searfield txtinput
 				return m, tea.Batch(cmd, tea.ShowCursor)
 			}
 		}

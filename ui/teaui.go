@@ -47,12 +47,13 @@ func (m DirContentModel) View() string {
 			result.WriteString(promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the File '"+m.dirContents[m.cursor].Name()+"'?") + "(y/n)\n")
 		}
 	} else if m.mode == 4 {
-		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("Search: ") + m.searchfield.View() + "\n")
+		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("Search: ") + " " + m.searchfield.View() + "\n")
 	}
 	if m.errormsg != "" {
 		result.WriteString(errorRender.Render(m.errormsg) + "\n")
 		m.errormsg = ""
 	}
-	result.WriteString(upperBorder.Render(currDir.Render("DIR ") + bottomSecond.Width(m.calculateBottombarWidth()).Render(" "+strings.Replace(m.getCurrentPath()+"  ", os.Getenv("HOME"), "$HOME", 1))))
+	currentpath := " " + strings.Replace(m.getCurrentPath()+"  ", os.Getenv("HOME"), "$HOME", 1)
+	result.WriteString(upperBorder.Render(currDir.Render("DIR ") + bottomSecond.Width(max(calculateWidth(result.String()), len(currentpath))+3).Render(currentpath)))
 	return outsidewindow.Render(result.String())
 }

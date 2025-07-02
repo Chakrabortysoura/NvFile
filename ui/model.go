@@ -7,15 +7,16 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 )
 
 type DirContentModel struct {
+	pathStack []string
 	//Stack to keep track of the current directory and for back and forth navigation.
 	// pathstack changes everytime we go inside a child directory inside the basedir(push)
 	// or we go back on the path(pop). This pathstack defines the directory whose contents are being displayed.
 	// Pathstack doesn't always represent same directory returned by 'os.Getwd()'.
 	// Unless used a specific command while using this application we are not changing the working directory of this binary(from where it was launched initially).
-	pathStack     []string
 	dirContents   []fs.FileInfo // slice containing the directory contents
 	searchResults []fs.FileInfo
 	cursor        int             // int value to define which element in the list is currently selected for tea ui components
@@ -47,6 +48,19 @@ func readdircontents(path string, mode bool) []fs.FileInfo {
 	return dirContents
 }
 
+func calculateWidth(contents string) int {
+	// Calculate the max width of each line in the contents string
+	// Calculate the width based on the distance between the '\n' characters in the contents string
+	maxWidth, prev := 0, 0
+	for i, char := range contents {
+		if char == '\n' {
+			maxWidth = max(maxWidth, i-prev)
+			prev = i
+		}
+	}
+	return maxWidth
+}
+
 func InitModel(basedir string) DirContentModel {
 	//Initializes the base model for directory navigation
 	result := DirContentModel{
@@ -62,8 +76,8 @@ func InitModel(basedir string) DirContentModel {
 	}
 	result.inputfield.CharLimit = 50 // Set the max character limit for input and the width of the textinput area
 	result.searchfield.CharLimit = 50
-	result.inputfield.Width = 40
-	result.searchfield.Width = 40
+	result.inputfield.Width = 50
+	result.searchfield.Width = 50
 	result.inputfield.Prompt = ""
 	result.searchfield.Prompt = ""
 
@@ -93,24 +107,30 @@ func (m *DirContentModel) goBack() {
 	m.updatesearchresult()
 }
 
-func (m *DirContentModel) updatesearchresult() {
-	// Updates the results of the view list with respect to the current search term
-	m.searchResults = make([]fs.FileInfo, 0)
-	for _, content := range m.dirContents {
-		if strings.Contains(strings.ToLower(content.Name()), m.searchfield.Value()) {
+func (m *DirContentModel) matchString(start int, mutex *sync.Mutex, wg *sync.WaitGroup) {
+	// Process the next 10 elements in the dircontents slice with the search term given in searchfield
+	defer wg.Done()
+	end := min(len(m.dirContents), start+10)
+	for _, content := range m.dirContents[start:end] {
+		if strings.Contains(strings.ToLower(content.Name()), strings.ToLower(m.searchfield.Value())) {
+			mutex.Lock()
 			m.searchResults = append(m.searchResults, content)
+			mutex.Unlock()
 		}
 	}
 }
 
-func (m *DirContentModel) calculateBottombarWidth() int {
-	//This function is to adjust the dynamic lengt of the bottom bar based on the state of the application
-	//This function checks whether the application has a txtinputwindow open and add that width of the bottombar
-	if m.mode == 0 {
-		return len(strings.Join(m.pathStack, "/") + "/   ")
-	} else if m.mode == 4 {
-		return len(strings.Join(m.pathStack, "/")+"/") + m.searchfield.Width
-	} else {
-		return len(strings.Join(m.pathStack, "/")+"/") + m.inputfield.Width
+func (m *DirContentModel) updatesearchresult() {
+	// Updates the results of the view list with respect to the current search term
+	m.searchResults = make([]fs.FileInfo, 0)
+	if m.searchfield.Value() == "" {
+		m.searchResults = append(m.searchResults, m.dirContents...)
 	}
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+	for i := 0; i < len(m.dirContents); i += 10 {
+		wg.Add(1)
+		go m.matchString(i, &mutex, &wg) //Create smaller go routines to parallelize the total search workload
+	}
+	wg.Wait()
 }
