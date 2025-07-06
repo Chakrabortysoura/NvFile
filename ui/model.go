@@ -95,7 +95,7 @@ func (m *DirContentModel) goForward(childFolder string) {
 	m.pathStack = append(m.pathStack, childFolder) // Equivalent to stack push. Used to enter a subdirectory in the current directory
 	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
 	m.cursor = 0
-	m.updatesearchresult()
+	m.filterSearchResult()
 }
 
 func (m *DirContentModel) goBack() {
@@ -104,7 +104,7 @@ func (m *DirContentModel) goBack() {
 	}
 	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
 	m.cursor = 0
-	m.updatesearchresult()
+	m.filterSearchResult()
 }
 
 func (m *DirContentModel) matchString(start int, mutex *sync.Mutex, wg *sync.WaitGroup) {
@@ -112,7 +112,7 @@ func (m *DirContentModel) matchString(start int, mutex *sync.Mutex, wg *sync.Wai
 	defer wg.Done()
 	end := min(len(m.dirContents), start+10)
 	for _, content := range m.dirContents[start:end] {
-		if strings.Contains(strings.ToLower(content.Name()), strings.ToLower(m.searchfield.Value())) {
+		if fuzzyStringMatch(content.Name(), m.searchfield.Value()) {
 			mutex.Lock()
 			m.searchResults = append(m.searchResults, content)
 			mutex.Unlock()
@@ -120,7 +120,7 @@ func (m *DirContentModel) matchString(start int, mutex *sync.Mutex, wg *sync.Wai
 	}
 }
 
-func (m *DirContentModel) updatesearchresult() {
+func (m *DirContentModel) filterSearchResult() {
 	// Updates the results of the view list with respect to the current search term
 	m.searchResults = make([]fs.FileInfo, 0)
 	if m.searchfield.Value() == "" {

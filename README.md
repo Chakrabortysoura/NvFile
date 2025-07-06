@@ -70,7 +70,6 @@ Some more useful optimizations that can be made are still in the works. Though  
 
 Some smaller features on the development roadmap- 
 1. A seperate preview window for files and directories.
-2. Implementing fuzzy search in the search mode for better user experience. 
 
 ## Be sure to Checkout 
 
