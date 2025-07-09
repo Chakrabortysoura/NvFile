@@ -24,7 +24,7 @@ type DirContentModel struct {
 	inputfield    textinput.Model // Textinput field for input
 	searchfield   textinput.Model // Textinput field for search
 	hiddenFile    bool            // Hiddenfile mode indicating to display or not display hidden file or directories in the file explorer
-	errormsg      string
+	errormsg      string          // Hold any and all errormessages that are generated while the application is running and used to display them in view mode
 }
 
 func readdircontents(path string, mode bool) []fs.FileInfo {
@@ -32,13 +32,19 @@ func readdircontents(path string, mode bool) []fs.FileInfo {
 	basedir, err := os.Open(path)
 	if err != nil {
 		fmt.Println("IO Error: " + err.Error())
-		os.Exit(2)
+		os.Exit(1)
 	}
-	defer basedir.Close()
+	defer func(basedir *os.File) {
+		err := basedir.Close()
+		if err != nil {
+			fmt.Println("Error closing the Basedirectory: " + err.Error())
+			os.Exit(1)
+		}
+	}(basedir)
 	dirContents, err := basedir.Readdir(0)
 	if err != nil {
 		fmt.Println("Error Reading from the Directory: " + err.Error())
-		os.Exit(2)
+		os.Exit(1)
 	}
 	if !mode {
 		dirContents = slices.DeleteFunc(dirContents, func(s fs.FileInfo) bool {
@@ -61,7 +67,7 @@ func calculateWidth(contents string) int {
 	return maxWidth
 }
 
-func InitModel(basedir string) DirContentModel {
+func InitModel(basedir, err string) DirContentModel {
 	//Initializes the base model for directory navigation
 	result := DirContentModel{
 		pathStack:     strings.Split(basedir, "/"), // Stores the basedir path in the form of stack
@@ -72,7 +78,7 @@ func InitModel(basedir string) DirContentModel {
 		inputfield:    textinput.New(),
 		searchfield:   textinput.New(),
 		hiddenFile:    false,
-		errormsg:      "",
+		errormsg:      err,
 	}
 	result.inputfield.CharLimit = 50 // Set the max character limit for input and the width of the textinput area
 	result.searchfield.CharLimit = 50
@@ -112,7 +118,7 @@ func (m *DirContentModel) matchString(start int, mutex *sync.Mutex, wg *sync.Wai
 	defer wg.Done()
 	end := min(len(m.dirContents), start+10)
 	for _, content := range m.dirContents[start:end] {
-		if fuzzyStringMatch(content.Name(), m.searchfield.Value()) {
+		if strings.Contains(strings.ToLower(content.Name()), strings.ToLower(m.searchfield.Value())) {
 			mutex.Lock()
 			m.searchResults = append(m.searchResults, content)
 			mutex.Unlock()
@@ -125,6 +131,7 @@ func (m *DirContentModel) filterSearchResult() {
 	m.searchResults = make([]fs.FileInfo, 0)
 	if m.searchfield.Value() == "" {
 		m.searchResults = append(m.searchResults, m.dirContents...)
+		return
 	}
 	var wg sync.WaitGroup
 	var mutex sync.Mutex

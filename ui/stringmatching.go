@@ -27,7 +27,7 @@ func editDistance(targetstring, searchterm string) int { // Function to calculat
 	return dparray[len(dparray)-1]
 }
 
-func fuzzyStringMatch(targetstring, searchterm string) bool { // Function to calculate the match ratio between the two given strings
+func stringmatcher(targetstring, searchterm string) bool { // Function to calculate the match ratio between the two given strings
 	targetstring, searchterm = strings.ToLower(targetstring), strings.ToLower(searchterm)
 	len1, len2 := len(targetstring), len(searchterm)
 

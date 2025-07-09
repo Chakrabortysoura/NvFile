@@ -34,29 +34,32 @@ func setTextRenderColors() {
 	dirRender = dirRender.Background(lipgloss.Color(configData["dirColor"][0]))
 }
 
-func InitConfig() {
+func InitConfig() error {
 	//Opens the config file and reads the config data from it
 	defer setTextRenderColors()
 	configfile, err := os.Open(os.Getenv("HOME") + "/.config/nvfile_config.json")
 	if os.IsNotExist(err) {
-		//If no nvfile_config.json file exists then create a new config file and put the default
+		//If no ~/.config/nvfile_config.json file exists then create a new config file and put the default
 		//json encoded config data in it
 		newconfigfile, err := os.Create(os.Getenv("HOME") + "/.config/nvfile_config.json")
 		if err != nil {
 			fmt.Println("Unable to create a new config file")
+			os.Exit(1)
 		}
 		defer newconfigfile.Close()
 		encoder := json.NewEncoder(newconfigfile)
 		err = encoder.Encode(configData)
 		if err != nil {
-			fmt.Println("Unable to create a new config file")
+			fmt.Println("Unable to write the encoded default config data in config file")
+			os.Exit(2)
 		}
-		return
+		return nil
 	}
 	defer configfile.Close()
 	decoder := json.NewDecoder(configfile) //Reads the json config data from the config file
 	err = decoder.Decode(&configData)
 	if err != nil {
-		fmt.Println("Unable to read from the config file")
+		return err
 	}
+	return nil
 }

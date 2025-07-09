@@ -24,7 +24,7 @@ func main() {
 			_, err := os.Open(os.Args[1])
 			if os.IsNotExist(err) {
 				fmt.Println("Given Base directory does not exist")
-				os.Exit(3)
+				os.Exit(1)
 			}
 			basedir = os.Args[1]
 			if basedir[len(basedir)-1] == '/' {
@@ -32,8 +32,13 @@ func main() {
 			}
 		}
 	}
-	ui.InitConfig()
-	var model = ui.InitModel(basedir)
+	var model ui.DirContentModel
+	err = ui.InitConfig()
+	if err != nil {
+		model = ui.InitModel(basedir, "Unable to decode config data from the config file. Using the default config")
+	} else {
+		model = ui.InitModel(basedir, "")
+	}
 	if _, err := tea.NewProgram(model).Run(); err != nil {
 		fmt.Println("Error starting the programme: " + err.Error())
 		os.Exit(1)

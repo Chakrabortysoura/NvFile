@@ -17,6 +17,12 @@ var (
 	promptRender  = lipgloss.NewStyle().Align(lipgloss.Left)
 )
 
+func highlightSearchSubstring(target, searchterm string) string {
+	index := strings.Index(strings.ToLower(target), strings.ToLower(searchterm))
+	highlighter := promptRender.Background(lipgloss.Color("#debb76"))
+	return strings.Join([]string{target[0:index], highlighter.Render(target[index : index+len(searchterm)]), target[index+len(searchterm):]}, "") // Only hightlight the searchterm which is a substring in the target content name
+}
+
 func (m DirContentModel) Init() tea.Cmd {
 	return tea.HideCursor
 }
@@ -30,9 +36,17 @@ func (m DirContentModel) View() string {
 			result.WriteString(" ")
 		}
 		if contents.IsDir() {
-			result.WriteString(dirRender.Render(contents.Name()))
+			if m.mode == 4 && m.searchfield.Value() != "" {
+				result.WriteString(highlightSearchSubstring(contents.Name(), m.searchfield.Value())) // Highlight the substring fo the original file or folder name and the matched searchterm
+			} else {
+				result.WriteString(dirRender.Render(contents.Name()))
+			}
 		} else {
-			result.WriteString(contents.Name())
+			if m.mode == 4 && m.searchfield.Value() != "" {
+				result.WriteString(highlightSearchSubstring(contents.Name(), m.searchfield.Value()))
+			} else {
+				result.WriteString(contents.Name())
+			}
 		}
 		result.WriteString("\n")
 	}
@@ -49,7 +63,7 @@ func (m DirContentModel) View() string {
 	} else if m.mode == 4 {
 		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("Search: ") + " " + m.searchfield.View() + "\n")
 	}
-	if m.errormsg != "" {
+	if strings.Compare(m.errormsg, "") != 0 {
 		result.WriteString(errorRender.Render(m.errormsg) + "\n")
 		m.errormsg = ""
 	}

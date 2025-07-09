@@ -1,5 +1,9 @@
-Release- v1.0.4
+Release- v1.0.5
 
-(v1.0.4) All the baseline features mentioned in the roadmap have been implemented in this Release.
+(v1.0.5) All the baseline features mentioned in the roadmap have been implemented in this Release.
 Patches incude-
-1. Now NvFile supports fuzzy searching instead of the previous normal simple sub-string matching. Updated search function is located in ui/stringmatching.go file.
+1. Fuzzy search based on Levenshtein edit distance is disable and substring match based search is used.
+2. Matched substring part hightlight added.
+3. Updated error handling-
+    a. All io related error now return exit code 1.
+    b. Newly updated error handler in ui/InitConfig function.
