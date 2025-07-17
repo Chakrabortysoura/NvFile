@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	"io/fs"
 	"os"
@@ -19,6 +20,7 @@ type DirContentModel struct {
 	// Unless used a specific command while using this application we are not changing the working directory of this binary(from where it was launched initially).
 	dirContents   []fs.FileInfo // slice containing the directory contents
 	searchResults []fs.FileInfo
+	contenttable  table.Model     // Embedded bubble table component to render the contents
 	cursor        int             // int value to define which element in the list is currently selected for tea ui components
 	mode          int             // mode referring to the state of the app [0= Normal mode, 1= Create new file, 2= Create new directory]
 	inputfield    textinput.Model // Textinput field for input
@@ -90,6 +92,7 @@ func InitModel(basedir, err string) DirContentModel {
 	result.dirContents = readdircontents(basedir, result.hiddenFile) // Reads data from basedir path and stores the FileInfo in a slice
 	result.searchResults = make([]fs.FileInfo, len(result.dirContents))
 	copy(result.searchResults, result.dirContents)
+	result.updateTableView() // Update the table contents with the new searchResults
 	return result
 }
 
@@ -116,8 +119,7 @@ func (m *DirContentModel) goBack() {
 func (m *DirContentModel) matchString(start int, mutex *sync.Mutex, wg *sync.WaitGroup) {
 	// Process the next 10 elements in the dircontents slice with the search term given in searchfield
 	defer wg.Done()
-	end := min(len(m.dirContents), start+10)
-	for _, content := range m.dirContents[start:end] {
+	for _, content := range m.dirContents[start:min(len(m.dirContents), start+10)] {
 		if strings.Contains(strings.ToLower(content.Name()), strings.ToLower(m.searchfield.Value())) {
 			mutex.Lock()
 			m.searchResults = append(m.searchResults, content)
@@ -140,4 +142,26 @@ func (m *DirContentModel) filterSearchResult() {
 		go m.matchString(i, &mutex, &wg) //Create smaller go routines to parallelize the total search workload
 	}
 	wg.Wait()
+}
+
+func (m *DirContentModel) updateTableView() { // Function to update the contenttable which is the internal compoenet of the DirContentModel. Updated the rows of the contenttable.
+	var row []table.Row
+	width := 0
+	for _, content := range m.searchResults {
+		width = max(width, len(content.Name()))
+		if content.IsDir() {
+			row = append(row, []string{"￭" + content.Name()})
+		} else {
+			row = append(row, []string{" " + content.Name()})
+		}
+	}
+	columns := []table.Column{
+		{Title: "Contents", Width: 12},
+	}
+	m.contenttable = table.New(
+		table.WithRows(row),
+		table.WithColumns(columns),
+		table.WithFocused(true),
+		table.WithHeight(min(len(m.searchResults)+1, 10)),
+	)
 }

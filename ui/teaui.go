@@ -11,7 +11,7 @@ var (
 	outsidewindow = lipgloss.NewStyle().Align(lipgloss.Left).Border(lipgloss.RoundedBorder()).MarginBottom(1)
 	currDir       = lipgloss.NewStyle().Align(lipgloss.Left).Bold(true).Foreground(lipgloss.Color("#0a0a0a"))
 	bottomSecond  = lipgloss.NewStyle().Align(lipgloss.Left).Background(lipgloss.Color(configData["bottombarSecond"][0])).Foreground(lipgloss.Color("#0a0a0a"))
-	dirRender     = lipgloss.NewStyle().Align(lipgloss.Center).Background(lipgloss.Color(configData["dirColor"][0]))
+	dirRender     = lipgloss.NewStyle().Align(lipgloss.Center).Background(lipgloss.Color("a6a3a2")).Foreground(lipgloss.Color("white"))
 	errorRender   = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color(configData["errorColor"][0])).MarginTop(1)
 	upperBorder   = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false, false, false)
 	promptRender  = lipgloss.NewStyle().Align(lipgloss.Left)
@@ -29,45 +29,28 @@ func (m DirContentModel) Init() tea.Cmd {
 
 func (m DirContentModel) View() string {
 	var result strings.Builder
-	for i, contents := range m.searchResults {
-		if m.cursor == i {
-			result.WriteString(">")
+	result.WriteString(m.contenttable.View() + "\n")
+	switch m.mode {
+	case 1:
+		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render(" New File Name:") + m.inputfield.View() + "\n")
+	case 2:
+		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render(" New Sub-Directory Name:") + m.inputfield.View() + "\n")
+	case 3:
+		if m.dirContents[m.contenttable.Cursor()].IsDir() {
+			result.WriteString(promptRender.Background(lipgloss.Color("#c22d04")).Render(" Delete the Directory '"+m.dirContents[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
 		} else {
-			result.WriteString(" ")
+			result.WriteString(promptRender.Background(lipgloss.Color("#c22d04")).Render(" Delete the File '"+m.dirContents[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
 		}
-		if contents.IsDir() {
-			if m.mode == 4 && m.searchfield.Value() != "" {
-				result.WriteString(highlightSearchSubstring(contents.Name(), m.searchfield.Value())) // Highlight the substring fo the original file or folder name and the matched searchterm
-			} else {
-				result.WriteString(dirRender.Render(contents.Name()))
-			}
-		} else {
-			if m.mode == 4 && m.searchfield.Value() != "" {
-				result.WriteString(highlightSearchSubstring(contents.Name(), m.searchfield.Value()))
-			} else {
-				result.WriteString(contents.Name())
-			}
-		}
-		result.WriteString("\n")
-	}
-	if m.mode == 1 {
-		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("New File Name:") + m.inputfield.View() + "\n")
-	} else if m.mode == 2 {
-		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("New Sub-Directory Name:") + m.inputfield.View() + "\n")
-	} else if m.mode == 3 {
-		if m.dirContents[m.cursor].IsDir() {
-			result.WriteString(promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the Directory '"+m.dirContents[m.cursor].Name()+"'?") + "(y/n)\n")
-		} else {
-			result.WriteString(promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the File '"+m.dirContents[m.cursor].Name()+"'?") + "(y/n)\n")
-		}
-	} else if m.mode == 4 {
-		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render("Search: ") + " " + m.searchfield.View() + "\n")
+	case 4:
+		result.WriteString(promptRender.Background(lipgloss.Color("#046e20")).Render(" Search: ") + " " + m.searchfield.View() + "\n")
 	}
 	if strings.Compare(m.errormsg, "") != 0 {
 		result.WriteString(errorRender.Render(m.errormsg) + "\n")
 		m.errormsg = ""
 	}
-	currentpath := " " + strings.Replace(m.getCurrentPath()+"  ", os.Getenv("HOME"), "$HOME", 1)
-	result.WriteString(upperBorder.Render(currDir.Render("DIR ") + bottomSecond.Width(max(calculateWidth(result.String()), len(currentpath))+3).Render(currentpath)))
+	currentpath := " " + strings.Replace(m.getCurrentPath()+"  ", os.Getenv("HOME"), "~", 1)
+	bottomSecond = bottomSecond.Width(max(calculateWidth(result.String()), len(currentpath)))
+	result.WriteString(upperBorder.Render(currDir.Render(" DIR ") + bottomSecond.Render(currentpath)))
+
 	return outsidewindow.Render(result.String())
 }
