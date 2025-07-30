@@ -1,9 +1,5 @@
-Release- v1.0.5
+Release- v1.1.0
 
-(v1.0.5) All the baseline features mentioned in the roadmap have been implemented in this Release.
-Patches incude-
-1. Fuzzy search based on Levenshtein edit distance is disable and substring match based search is used.
-2. Matched substring part hightlight added.
-3. Updated error handling-
-    a. All io related error now return exit code 1.
-    b. Newly updated error handler in ui/InitConfig function.
+(v1.1.0) All the baseline features mentioned in the roadmap have been implemented in this Release.
+Minor changes incudes-
+1. Replaced the view in nvfile with a bubbletea component.
