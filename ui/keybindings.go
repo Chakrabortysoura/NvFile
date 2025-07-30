@@ -174,11 +174,13 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch {
 			case slices.Contains(configData["goback"], msg.String()):
 				m.mode = 0
+			case slices.Contains(configData["exit"], msg.String()):
+				return m, tea.Quit
 			default:
 				var cmd tea.Cmd
 				m.searchfield.Focus()
 				m.searchfield, cmd = m.searchfield.Update(msg)
-				m.filterSearchResult() //Filter the viewlist with the current searchterm searfield txtinput
+				m.Search() //Filter the viewlist with the current searfield txtinput
 				m.updateTableView()
 				return m, tea.Batch(cmd, tea.ShowCursor)
 			}

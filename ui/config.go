@@ -11,7 +11,6 @@ var (
 	configData = map[string][]string{
 		"bottombarFirst":   {"#ad0e00"},
 		"bottombarSecond":  {"#db7535"},
-		"dirColor":         {"#545755"},
 		"errorColor":       {"#ff0033"},
 		"togglehiddenfile": {"ctrl+h"},
 		"down":             {"j", "down"},
@@ -28,10 +27,9 @@ var (
 func setTextRenderColors() {
 	//Initialize the ui component renders and keybindings with the cofig data
 	//after reading from config file or the default config data
-	currDir = currDir.Background(lipgloss.Color(configData["bottombarFirst"][0]))
-	bottomSecond = bottomSecond.Background(lipgloss.Color(configData["bottombarSecond"][0]))
+	bottomFirst = bottomFirst.Background(lipgloss.Color(configData["bottombarFirst"][0])).Foreground(lipgloss.Color(configData["bottombarFirst"][1]))
+	bottomSecond = bottomSecond.Background(lipgloss.Color(configData["bottombarSecond"][0])).Foreground(lipgloss.Color(configData["bottombarSecond"][1]))
 	errorRender = errorRender.Background(lipgloss.Color(configData["errorColor"][0]))
-	dirRender = dirRender.Background(lipgloss.Color(configData["dirColor"][0]))
 }
 
 func InitConfig() error {

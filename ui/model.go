@@ -8,7 +8,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync"
 )
 
 type DirContentModel struct {
@@ -104,7 +103,7 @@ func (m *DirContentModel) goForward(childFolder string) {
 	m.pathStack = append(m.pathStack, childFolder) // Equivalent to stack push. Used to enter a subdirectory in the current directory
 	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
 	m.cursor = 0
-	m.filterSearchResult()
+	m.Search()
 }
 
 func (m *DirContentModel) goBack() {
@@ -113,35 +112,7 @@ func (m *DirContentModel) goBack() {
 	}
 	m.dirContents = readdircontents(strings.Join(m.pathStack, "/")+"/", m.hiddenFile)
 	m.cursor = 0
-	m.filterSearchResult()
-}
-
-func (m *DirContentModel) matchString(start int, mutex *sync.Mutex, wg *sync.WaitGroup) {
-	// Process the next 10 elements in the dircontents slice with the search term given in searchfield
-	defer wg.Done()
-	for _, content := range m.dirContents[start:min(len(m.dirContents), start+10)] {
-		if strings.Contains(strings.ToLower(content.Name()), strings.ToLower(m.searchfield.Value())) {
-			mutex.Lock()
-			m.searchResults = append(m.searchResults, content)
-			mutex.Unlock()
-		}
-	}
-}
-
-func (m *DirContentModel) filterSearchResult() {
-	// Updates the results of the view list with respect to the current search term
-	m.searchResults = make([]fs.FileInfo, 0)
-	if m.searchfield.Value() == "" {
-		m.searchResults = append(m.searchResults, m.dirContents...)
-		return
-	}
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-	for i := 0; i < len(m.dirContents); i += 10 {
-		wg.Add(1)
-		go m.matchString(i, &mutex, &wg) //Create smaller go routines to parallelize the total search workload
-	}
-	wg.Wait()
+	m.Search()
 }
 
 func (m *DirContentModel) updateTableView() { // Function to update the contenttable which is the internal compoenet of the DirContentModel. Updated the rows of the contenttable.
@@ -150,7 +121,7 @@ func (m *DirContentModel) updateTableView() { // Function to update the contentt
 	for _, content := range m.searchResults {
 		width = max(width, len(content.Name()))
 		if content.IsDir() {
-			row = append(row, []string{"￭" + content.Name()})
+			row = append(row, []string{" " + content.Name() + "/"})
 		} else {
 			row = append(row, []string{" " + content.Name()})
 		}
