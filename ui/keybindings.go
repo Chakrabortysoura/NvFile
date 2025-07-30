@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
+	"io/fs"
 	"os"
 	"os/exec"
 	"slices"
@@ -19,17 +20,23 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch {
 			case slices.Contains(configData["down"], msg.String()):
-				m.cursor = (m.cursor + 1) % len(m.searchResults)
+				if m.contenttable.Cursor() == len(m.searchResults)-1 {
+					m.contenttable.GotoTop()
+				} else {
+					m.contenttable.MoveDown(1)
+				}
 			case slices.Contains(configData["up"], msg.String()):
-				m.cursor -= 1
-				if m.cursor < 0 {
-					m.cursor = len(m.searchResults) - 1
+				if m.contenttable.Cursor() > 0 {
+					m.contenttable.MoveUp(1)
+				} else {
+					m.contenttable.GotoBottom()
 				}
 			case slices.Contains(configData["action"], msg.String()): // Enters the selected subdirectory or opens the selected file in nvim
-				if m.cursor != -1 {
-					if m.searchResults[m.cursor].IsDir() {
-						m.searchfield.Reset()
-						m.goForward(m.searchResults[m.cursor].Name())
+				if m.contenttable.Cursor() != -1 {
+					if m.searchResults[m.contenttable.Cursor()].IsDir() {
+						m.searchfield.Reset() //Clear out the searchfield input
+						m.goForward(m.searchResults[m.contenttable.Cursor()].Name())
+						m.updateTableView()
 					} else {
 						// This next block of code is to acquire a new stdin file descriptor for Neovim
 						// Attach this file descriptor as stdin for neovim
@@ -41,7 +48,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							os.Exit(3)
 						}
 						os.Stdin = tty
-						cmd := exec.Command("nvim", m.getCurrentPath()+m.searchResults[m.cursor].Name())
+						cmd := exec.Command("nvim", m.getCurrentPath()+m.searchResults[m.contenttable.Cursor()].Name())
 						cmd.Stdin = tty
 						cmd.Stderr = os.Stderr
 						cmd.Stdout = os.Stdout
@@ -52,9 +59,10 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			case slices.Contains(configData["togglehiddenfile"], msg.String()): //Toggle between showing and not showing hidden file or subdir
-				m.hiddenFile = !m.hiddenFile
+				m.hiddenFile = !m.hiddenFile // Reverse the hiddenFile toggle
 				m.dirContents = readdircontents(m.getCurrentPath(), m.hiddenFile)
-				m.searchResults = readdircontents(m.getCurrentPath(), m.hiddenFile)
+				m.searchResults = append(make([]fs.FileInfo, 0), m.dirContents...)
+				m.updateTableView()
 			case slices.Contains(configData["newfile"], msg.String()): // Switches the application state to new file creation mode
 				m.mode = 1
 				return m, tea.ShowCursor
@@ -64,6 +72,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case slices.Contains(configData["goback"], msg.String()): // go back to the parent directory of the current base path
 				m.searchfield.Reset()
 				m.goBack()
+				m.updateTableView()
 			case slices.Contains(configData["deletefileordir"], msg.String()):
 				m.mode = 3
 			case strings.Compare("ctrl+f", msg.String()) == 0:
@@ -90,8 +99,8 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.dirContents = append(m.dirContents, newFileInfo)     // Updates the contents of the dircontent list
 				m.searchResults = append(m.searchResults, newFileInfo) // Updates the contents of the searchlist list
+				m.updateTableView()
 				m.mode = 0
-				m.cursor = 0
 			case slices.Contains(configData["goback"], msg.String()): // go back to view mode cancel the file creation
 				m.inputfield.Reset()
 				m.mode = 0
@@ -128,8 +137,8 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.dirContents = append(m.dirContents, newDirInfo)     // Updates the contents of the dircontents list
 				m.searchResults = append(m.searchResults, newDirInfo) // Updates the contents of the searchlist list
+				m.updateTableView()
 				m.mode = 0
-				m.cursor = 0
 			case slices.Contains(configData["goback"], msg.String()): // go back to  view mode cancel the file creation
 				m.inputfield.Reset()
 				m.mode = 0
@@ -148,29 +157,31 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "y", "Y": // The selected element with the cursor gets deleted
-				if err := os.RemoveAll(m.getCurrentPath() + m.dirContents[m.cursor].Name()); err != nil {
+				if err := os.RemoveAll(m.getCurrentPath() + m.dirContents[m.contenttable.Cursor()].Name()); err != nil {
 					m.errormsg = "Unable Delete the selected item."
 				}
-				m.dirContents = slices.Delete(m.dirContents, m.cursor, m.cursor+1)     // Removes the deleted file or directory from directory contents list
-				m.searchResults = slices.Delete(m.searchResults, m.cursor, m.cursor+1) // Removes the deleted file or directory from search contents list
+				m.dirContents = slices.Delete(m.dirContents, m.contenttable.Cursor(), m.contenttable.Cursor()+1)     // Removes the deleted file or directory from directory contents list
+				m.searchResults = slices.Delete(m.searchResults, m.contenttable.Cursor(), m.contenttable.Cursor()+1) // Removes the deleted file or directory from search contents list
+				m.updateTableView()
 				m.mode = 0
 			case "n", "N": // Returns to view mode
 				m.mode = 0
 			}
-			m.cursor = 0
 		}
 	case 4: // Application is in search mode
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch {
 			case slices.Contains(configData["goback"], msg.String()):
-				m.cursor = 0
 				m.mode = 0
+			case slices.Contains(configData["exit"], msg.String()):
+				return m, tea.Quit
 			default:
 				var cmd tea.Cmd
 				m.searchfield.Focus()
 				m.searchfield, cmd = m.searchfield.Update(msg)
-				m.filterSearchResult() //Filter the viewlist with the current searchterm searfield txtinput
+				m.Search() //Filter the viewlist with the current searfield txtinput
+				m.updateTableView()
 				return m, tea.Batch(cmd, tea.ShowCursor)
 			}
 		}

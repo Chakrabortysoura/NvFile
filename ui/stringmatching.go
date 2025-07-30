@@ -1,40 +1,52 @@
 package ui
 
-import "strings"
+import (
+	"github.com/charmbracelet/lipgloss"
+	"io/fs"
+	"strings"
+	"sync"
+)
 
-func editDistance(targetstring, searchterm string) int { // Function to calculate the Levenshtein edit distance between the two strings
-	if len(targetstring) == 0 || len(searchterm) == 0 {
-		return max(len(targetstring), len(searchterm))
-	}
-	row, col := len(targetstring), len(searchterm)
-	dparray := make([]int, (row+1)*(col+1))
-	for i := 0; i < row+1; i++ {
-		for j := 0; j < col+1; j++ {
-			if i == 0 {
-				dparray[i*(col+1)+j] = j
-			} else if j == 0 {
-				dparray[i*(col+1)+j] = i
-			} else {
-				dparray[i*(col+1)+j] = min(dparray[(i-1)*(col+1)+j], dparray[i*(col+1)+j-1])
-				if targetstring[i-1] != searchterm[j-1] {
-					dparray[i*(col+1)+j] = min(dparray[(i-1)*(col+1)+j-1]+1, dparray[i*(col+1)+j])
-				} else {
-					dparray[i*(col+1)+j] = min(dparray[(i-1)*(col+1)+j-1], dparray[i*(col+1)+j])
-				}
-			}
-		}
-	}
-	return dparray[len(dparray)-1]
+func highlightMatchedSubstring(target, searchterm string) string {
+	// Selectively hightlight the searchterm which is a substring in the target content name
+	index := strings.Index(strings.ToLower(target), strings.ToLower(searchterm))
+	highlighter := promptRender.Background(lipgloss.Color("#debb76"))
+	return strings.Join([]string{target[0:index], highlighter.Render(target[index : index+len(searchterm)]), target[index+len(searchterm):]}, "")
 }
 
-func stringmatcher(targetstring, searchterm string) bool { // Function to calculate the match ratio between the two given strings
-	targetstring, searchterm = strings.ToLower(targetstring), strings.ToLower(searchterm)
-	len1, len2 := len(targetstring), len(searchterm)
-
-	editdistance := editDistance(targetstring, searchterm)
-	if float32((len1+len2-editdistance)/(len1+len2)) >= 0.50 { // If the ratio of match calculated with the edit distance between the two given strings in above 50%
-		// consider there is a potential match between the two strings
-		return true
+func matchString(dirContent []fs.FileInfo, searchterm string, wg *sync.WaitGroup, out chan<- fs.FileInfo) {
+	// Process the next 10 elements in the dircontents slice with the search term given in searchfield
+	// If match successfull send this fs.Fileinfo to the (out) channel.
+	defer wg.Done()
+	for _, content := range dirContent {
+		if strings.Contains(strings.ToLower(content.Name()), strings.ToLower(searchterm)) {
+			out <- content
+		}
 	}
-	return false
+}
+
+func (m *DirContentModel) Search() {
+	// Updates the results of the view list with respect to the current search term
+	m.searchResults = make([]fs.FileInfo, 0)
+	if m.searchfield.Value() == "" {
+		m.searchResults = append(m.searchResults, m.dirContents...)
+		return
+	}
+	var wg1, wg2 sync.WaitGroup
+	resultChan := make(chan fs.FileInfo, 10)
+	for i := 0; i < len(m.dirContents); i += 10 {
+		wg2.Add(1)
+		go matchString(m.dirContents[i:min(i+10, len(m.dirContents))], m.searchfield.Value(), &wg2, resultChan) //Create smaller go routines to parallelize the total search workload
+	}
+	wg1.Add(1)
+	go func() {
+		//Collect the searchresults from the result channel and append those model.searchResults
+		defer wg1.Done()
+		for i := range resultChan {
+			m.searchResults = append(m.searchResults, i)
+		}
+	}()
+	wg2.Wait()
+	close(resultChan)
+	wg1.Wait()
 }
