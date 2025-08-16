@@ -157,12 +157,15 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "y", "Y": // The selected element with the cursor gets deleted
-				if err := os.RemoveAll(m.getCurrentPath() + m.dirContents[m.contenttable.Cursor()].Name()); err != nil {
+				if err := os.RemoveAll(m.getCurrentPath() + m.searchResults[m.contenttable.Cursor()].Name()); err != nil {
 					m.errormsg = "Unable Delete the selected item."
 				}
-				m.dirContents = slices.Delete(m.dirContents, m.contenttable.Cursor(), m.contenttable.Cursor()+1)     // Removes the deleted file or directory from directory contents list
+				m.dirContents = slices.DeleteFunc(m.dirContents, func(element fs.FileInfo) bool {
+					return strings.Compare(element.Name(), m.searchResults[m.contenttable.Cursor()].Name()) == 0
+				}) // Removes the deleted file or directory from directory contents list
 				m.searchResults = slices.Delete(m.searchResults, m.contenttable.Cursor(), m.contenttable.Cursor()+1) // Removes the deleted file or directory from search contents list
 				m.updateTableView()
+				m.contenttable.SetCursor(0)
 				m.mode = 0
 			case "n", "N": // Returns to view mode
 				m.mode = 0

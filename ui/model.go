@@ -17,8 +17,8 @@ type DirContentModel struct {
 	// or we go back on the path(pop). This pathstack defines the directory whose contents are being displayed.
 	// Pathstack doesn't always represent same directory returned by 'os.Getwd()'.
 	// Unless used a specific command while using this application we are not changing the working directory of this binary(from where it was launched initially).
-	dirContents   []fs.FileInfo // slice containing the directory contents
-	searchResults []fs.FileInfo
+	dirContents   []fs.FileInfo   // slice containing the directory contents
+	searchResults []fs.FileInfo   // slice containing the filtered search results based on the searchterm
 	contenttable  table.Model     // Embedded bubble table component to render the contents
 	cursor        int             // int value to define which element in the list is currently selected for tea ui components
 	mode          int             // mode referring to the state of the app [0= Normal mode, 1= Create new file, 2= Create new directory]

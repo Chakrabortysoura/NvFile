@@ -30,9 +30,9 @@ func (m DirContentModel) View() string {
 		result.WriteString(" " + promptRender.Background(lipgloss.Color("#046e20")).Render("New Sub-Directory Name:") + m.inputfield.View() + "\n")
 	case 3:
 		if m.dirContents[m.contenttable.Cursor()].IsDir() {
-			result.WriteString(" " + promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the Directory '"+m.dirContents[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
+			result.WriteString(" " + promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the Directory '"+m.searchResults[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
 		} else {
-			result.WriteString(" " + promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the File '"+m.dirContents[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
+			result.WriteString(" " + promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the File '"+m.searchResults[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
 		}
 	case 4:
 		result.WriteString(" " + promptRender.Background(lipgloss.Color("#046e20")).Render("Search:") + " " + m.searchfield.View() + "\n")

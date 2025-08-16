@@ -1,5 +1,5 @@
 Release- v1.1.0
 
-(v1.1.0) All the baseline features mentioned in the roadmap have been implemented in this Release.
-Minor changes incudes-
-1. Replaced the view in nvfile with a bubbletea component.
+(v1.1.1) All the baseline features mentioned in the roadmap have been implemented in this Release.
+Patched include-
+1. Fixes indexing issue in delete mode when the searchresults are filtered through a searchterm.
