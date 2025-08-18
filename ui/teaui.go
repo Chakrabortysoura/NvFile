@@ -24,17 +24,17 @@ func (m DirContentModel) View() string {
 	var result strings.Builder
 	result.WriteString(m.contenttable.View() + "\n")
 	switch m.mode {
-	case 1:
+	case 1: //Creating new file mode
 		result.WriteString(" " + promptRender.Background(lipgloss.Color("#046e20")).Render("New File Name:") + m.inputfield.View() + "\n")
-	case 2:
+	case 2: //Creating new directory mode
 		result.WriteString(" " + promptRender.Background(lipgloss.Color("#046e20")).Render("New Sub-Directory Name:") + m.inputfield.View() + "\n")
-	case 3:
+	case 3: //Deleting a file or directory mode
 		if m.dirContents[m.contenttable.Cursor()].IsDir() {
 			result.WriteString(" " + promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the Directory '"+m.searchResults[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
 		} else {
 			result.WriteString(" " + promptRender.Background(lipgloss.Color("#c22d04")).Render("Delete the File '"+m.searchResults[m.contenttable.Cursor()].Name()+"'?") + "(y/n)\n")
 		}
-	case 4:
+	case 4: //Searching through the contents
 		result.WriteString(" " + promptRender.Background(lipgloss.Color("#046e20")).Render("Search:") + " " + m.searchfield.View() + "\n")
 	}
 	if strings.Compare(m.errormsg, "") != 0 {

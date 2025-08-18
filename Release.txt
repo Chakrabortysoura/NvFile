@@ -1,5 +1,5 @@
 Release- v1.1.0
 
-(v1.1.1) All the baseline features mentioned in the roadmap have been implemented in this Release.
+(v1.1.2) All the baseline features mentioned in the roadmap have been implemented in this Release.
 Patched include-
-1. Fixes indexing issue in delete mode when the searchresults are filtered through a searchterm.
+1. Pressing the "goback" button after a successfull search resets the searchfield value and the contents shows all the contents of the current directory.

@@ -69,9 +69,13 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case slices.Contains(configData["newsubdir"], msg.String()): // Switches the application state to new file directory mode
 				m.mode = 2
 				return m, tea.ShowCursor
-			case slices.Contains(configData["goback"], msg.String()): // go back to the parent directory of the current base path
+			case slices.Contains(configData["goback"], msg.String()): // If there is something in the searchfield then just clear the searchfield
+				//otherwise go back to the parent directory
+				if strings.Compare(m.searchfield.Value(), "") == 0 {
+					m.goBack()
+				}
 				m.searchfield.Reset()
-				m.goBack()
+				m.Search()
 				m.updateTableView()
 			case slices.Contains(configData["deletefileordir"], msg.String()):
 				m.mode = 3
@@ -163,7 +167,9 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.dirContents = slices.DeleteFunc(m.dirContents, func(element fs.FileInfo) bool {
 					return strings.Compare(element.Name(), m.searchResults[m.contenttable.Cursor()].Name()) == 0
 				}) // Removes the deleted file or directory from directory contents list
-				m.searchResults = slices.Delete(m.searchResults, m.contenttable.Cursor(), m.contenttable.Cursor()+1) // Removes the deleted file or directory from search contents list
+				m.searchResults = slices.DeleteFunc(m.searchResults, func(element fs.FileInfo) bool {
+					return strings.Compare(element.Name(), m.searchResults[m.contenttable.Cursor()].Name()) == 0
+				}) // Removes the deleted file or directory from directory contents list
 				m.updateTableView()
 				m.contenttable.SetCursor(0)
 				m.mode = 0

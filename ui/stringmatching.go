@@ -35,18 +35,18 @@ func (m *DirContentModel) Search() {
 	var wg1, wg2 sync.WaitGroup
 	resultChan := make(chan fs.FileInfo, 10)
 	for i := 0; i < len(m.dirContents); i += 10 {
-		wg2.Add(1)
-		go matchString(m.dirContents[i:min(i+10, len(m.dirContents))], m.searchfield.Value(), &wg2, resultChan) //Create smaller go routines to parallelize the total search workload
+		wg1.Add(1)
+		go matchString(m.dirContents[i:min(i+10, len(m.dirContents))], m.searchfield.Value(), &wg1, resultChan) //Create smaller go routines to parallelize the total search workload
 	}
-	wg1.Add(1)
+	wg2.Add(1)
 	go func() {
 		//Collect the searchresults from the result channel and append those model.searchResults
-		defer wg1.Done()
+		defer wg2.Done()
 		for i := range resultChan {
 			m.searchResults = append(m.searchResults, i)
 		}
 	}()
-	wg2.Wait()
-	close(resultChan)
 	wg1.Wait()
+	close(resultChan)
+	wg2.Wait()
 }
