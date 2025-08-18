@@ -1,4 +1,4 @@
-Release- v1.1.0
+Release- v1.1.2
 
 (v1.1.2) All the baseline features mentioned in the roadmap have been implemented in this Release.
 Patched include-
