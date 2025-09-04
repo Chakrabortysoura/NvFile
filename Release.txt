@@ -1,5 +1,6 @@
-Release- v1.1.2
+Release- v1.1.3
 
-(v1.1.2) All the baseline features mentioned in the roadmap have been implemented in this Release.
+(v1.1.3) All the baseline features mentioned in the roadmap have been implemented in this Release.
 Patched include-
-1. Pressing the "goback" button after a successfull search resets the searchfield value and the contents shows all the contents of the current directory.
+1. Fixed to the directory default permission when creating subdirectories using nvfile. Now the default permission values include x permission for the owner.
+

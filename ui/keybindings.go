@@ -105,6 +105,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.searchResults = append(m.searchResults, newFileInfo) // Updates the contents of the searchlist list
 				m.updateTableView()
 				m.mode = 0
+				return m, nil
 			case slices.Contains(configData["goback"], msg.String()): // go back to view mode cancel the file creation
 				m.inputfield.Reset()
 				m.mode = 0
@@ -122,19 +123,20 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch {
-			case slices.Contains(configData["action"], msg.String()): // Ends the current dirname input
+			case slices.Contains(configData["action"], msg.String()): // Ends the current dirname input and creates the sub directory
 				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
-				err := os.Mkdir(m.getCurrentPath()+m.inputfield.Value(), 0660)
+				err := os.Mkdir(m.getCurrentPath()+m.inputfield.Value(), 0755)
+				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
 				}
-				newDir, err := os.Open(m.getCurrentPath() + m.inputfield.Value())
+				newDir, err := os.Open(m.getCurrentPath() + m.inputfield.Value()) //open the newly created directory
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
 				}
-				newDirInfo, err := newDir.Stat()
+				newDirInfo, err := newDir.Stat() // obtain the stats for the new directory
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
@@ -143,6 +145,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.searchResults = append(m.searchResults, newDirInfo) // Updates the contents of the searchlist list
 				m.updateTableView()
 				m.mode = 0
+				return m, nil
 			case slices.Contains(configData["goback"], msg.String()): // go back to  view mode cancel the file creation
 				m.inputfield.Reset()
 				m.mode = 0
