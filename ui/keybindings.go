@@ -81,6 +81,8 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.mode = 3
 			case strings.Compare("ctrl+f", msg.String()) == 0:
 				m.mode = 4
+			case slices.Contains(configData["rename"], msg.String()):
+				m.mode = 5
 			case slices.Contains(configData["exit"], msg.String()):
 				return m, tea.Quit
 			}
@@ -124,9 +126,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch {
 			case slices.Contains(configData["action"], msg.String()): // Ends the current dirname input and creates the sub directory
-				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
 				err := os.Mkdir(m.getCurrentPath()+m.inputfield.Value(), 0755)
-				defer m.inputfield.Reset() //Clear the inputfield after the operation is done
 				if err != nil {
 					m.errormsg = err.Error()
 					return m, nil
@@ -144,6 +144,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.dirContents = append(m.dirContents, newDirInfo)     // Updates the contents of the dircontents list
 				m.searchResults = append(m.searchResults, newDirInfo) // Updates the contents of the searchlist list
 				m.updateTableView()
+				m.inputfield.Reset()
 				m.mode = 0
 				return m, nil
 			case slices.Contains(configData["goback"], msg.String()): // go back to  view mode cancel the file creation
@@ -151,6 +152,7 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.mode = 0
 				return m, nil
 			case slices.Contains(configData["exit"], msg.String()): //Quit the programme
+				m.searchfield.Reset()
 				return m, tea.Quit
 			default:
 				var cmd tea.Cmd
@@ -194,6 +196,34 @@ func (m DirContentModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.searchfield, cmd = m.searchfield.Update(msg)
 				m.Search() //Filter the viewlist with the current searfield txtinput
 				m.updateTableView()
+				return m, tea.Batch(cmd, tea.ShowCursor)
+			}
+		}
+	case 5: // Application is in renaming mode
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch {
+			case slices.Contains(configData["goback"], msg.String()):
+				m.inputfield.Reset()
+				m.mode = 0
+			case slices.Contains(configData["exit"], msg.String()):
+				return m, tea.Quit
+			case slices.Contains(configData["action"], msg.String()): // Rename a particular entry in the directory with the name provided in the txtinput
+				err := os.Rename(m.getCurrentPath()+m.searchResults[m.contenttable.Cursor()].Name(), m.getCurrentPath()+m.inputfield.Value())
+				if err != nil {
+					m.errormsg = err.Error()
+					return m, tea.ShowCursor
+				}
+				m.dirContents = readdircontents(m.getCurrentPath(), m.hiddenFile) // Defaults back to mode 0 and replaces the dir contents after the renaming operation
+				m.inputfield.Reset()
+				m.Search()
+				m.mode = 0
+				m.updateTableView()
+				return m, tea.ShowCursor
+			default:
+				var cmd tea.Cmd
+				m.inputfield.Focus()
+				m.inputfield, cmd = m.inputfield.Update(msg)
 				return m, tea.Batch(cmd, tea.ShowCursor)
 			}
 		}

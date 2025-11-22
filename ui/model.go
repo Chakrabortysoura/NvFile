@@ -11,12 +11,12 @@ import (
 )
 
 type DirContentModel struct {
-	pathStack []string
 	//Stack to keep track of the current directory and for back and forth navigation.
 	// pathstack changes everytime we go inside a child directory inside the basedir(push)
 	// or we go back on the path(pop). This pathstack defines the directory whose contents are being displayed.
 	// Pathstack doesn't always represent same directory returned by 'os.Getwd()'.
 	// Unless used a specific command while using this application we are not changing the working directory of this binary(from where it was launched initially).
+	pathStack     []string
 	dirContents   []fs.FileInfo   // slice containing the directory contents
 	searchResults []fs.FileInfo   // slice containing the filtered search results based on the searchterm
 	contenttable  table.Model     // Embedded bubble table component to render the contents

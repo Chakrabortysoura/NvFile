@@ -1,6 +1,8 @@
-Release- v1.1.3
+Release- v1.2.0
 
-(v1.1.3) All the baseline features mentioned in the roadmap have been implemented in this Release.
+(v1.2.0) All the baseline features mentioned in the roadmap have been implemented in this Release.
+Feature Inclusion- 
+1. Ability to add a shortcut for a new rename file/sub-directory from within nvfile. 
 Patched include-
-1. Fixed to the directory default permission when creating subdirectories using nvfile. Now the default permission values include x permission for the owner.
+1. Fixed the inputfield not reseting after a new input for creating a new directory was registered. 
 

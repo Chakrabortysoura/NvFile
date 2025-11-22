@@ -36,6 +36,8 @@ func (m DirContentModel) View() string {
 		}
 	case 4: //Searching through the contents
 		result.WriteString(" " + promptRender.Background(lipgloss.Color("#046e20")).Render("Search:") + " " + m.searchfield.View() + "\n")
+	case 5: //Renaming an entry in the current directory
+		result.WriteString(" " + promptRender.Background(lipgloss.Color("#046e20")).Render("New name:") + " " + m.inputfield.View() + "\n")
 	}
 	if strings.Compare(m.errormsg, "") != 0 {
 		result.WriteString(" " + errorRender.Render(m.errormsg) + "\n")

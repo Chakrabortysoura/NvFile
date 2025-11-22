@@ -21,6 +21,7 @@ var (
 		"deletefileordir":  {"delete"},
 		"exit":             {"ctrl+z", "ctrl+q"},
 		"action":           {"enter"},
+		"rename":           {"ctrl+r"},
 	}
 )
 
