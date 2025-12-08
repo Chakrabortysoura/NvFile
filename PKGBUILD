@@ -8,7 +8,7 @@
 
 # Maintainer: Souranil Chakraborty <chakrabortysoura21@gmail.com>
 pkgname=NvFile 
-pkgver=1.2.0
+pkgver=1.2.1
 pkgrel=1
 pkgdesc="A simple tui file explorer that can work with various text editors for all your developer needs."
 arch=(x86_64)
@@ -23,7 +23,7 @@ replaces=()
 backup=()
 options=()
 install=
-source=('https://github.com/Chakrabortysoura/NvFile/archive/refs/tags/v1.2.0.tar.gz')
+source=('https://github.com/Chakrabortysoura/NvFile/archive/refs/tags/v1.2.1.tar.gz')
 noextract=()
 sha256sums=('SKIP')
 validpgpkeys=('SKIP')
@@ -33,8 +33,8 @@ validpgpkeys=('SKIP')
 
 prepare() {
 	cd "$srcdir"
-	rm v1.2.0.tar.gz
-	mv NvFile-1.2.0 NvFile
+	rm v1.2.1.tar.gz
+	mv NvFile-1.2.1 NvFile
 	echo "Preparing packge"
 }
 

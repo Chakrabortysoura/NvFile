@@ -18,6 +18,9 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Removing PKGBUILD 
+        run: rm PKGBUILD
+
       - name: Installing dependencies
         run: go mod download
 

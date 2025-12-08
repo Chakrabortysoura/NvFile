@@ -9,8 +9,8 @@ import (
 
 var (
 	configData = map[string][]string{
-		"bottombarFirst":   {"#ad0e00"},
-		"bottombarSecond":  {"#db7535"},
+		"bottombarFirst":   {"#ad0e00", "#ad0e00"},
+		"bottombarSecond":  {"#db7535", "#db7535"},
 		"errorColor":       {"#ff0033"},
 		"togglehiddenfile": {"ctrl+h"},
 		"down":             {"j", "down"},
@@ -35,7 +35,6 @@ func setTextRenderColors() {
 
 func InitConfig() error {
 	//Opens the config file and reads the config data from it
-	defer setTextRenderColors()
 	configfile, err := os.Open(os.Getenv("HOME") + "/.config/nvfile_config.json")
 	if os.IsNotExist(err) {
 		//If no ~/.config/nvfile_config.json file exists then create a new config file and put the default
@@ -43,9 +42,8 @@ func InitConfig() error {
 		newconfigfile, err := os.Create(os.Getenv("HOME") + "/.config/nvfile_config.json")
 		if err != nil {
 			fmt.Println("Unable to create a new config file")
-			os.Exit(1)
+			return nil // If unable to generate the default config file in the .config folder open with the default config
 		}
-		defer newconfigfile.Close()
 		encoder := json.NewEncoder(newconfigfile)
 		err = encoder.Encode(configData)
 		if err != nil {
@@ -60,5 +58,6 @@ func InitConfig() error {
 	if err != nil {
 		return err
 	}
+	setTextRenderColors()
 	return nil
 }
