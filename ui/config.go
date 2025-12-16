@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
 	"os"
+	"strconv"
 )
 
 var (
 	configData = map[string][]string{
-		"bottombarFirst":   {"#ad0e00", "#ad0e00"},
-		"bottombarSecond":  {"#db7535", "#db7535"},
+		"bottombarFirst":   {"#ad0e00", "#000000"},
+		"bottombarSecond":  {"#db7535", "#000000"},
 		"errorColor":       {"#ff0033"},
 		"togglehiddenfile": {"ctrl+h"},
 		"down":             {"j", "down"},
@@ -22,7 +23,7 @@ var (
 		"exit":             {"ctrl+z", "ctrl+q"},
 		"action":           {"enter"},
 		"rename":           {"ctrl+r"},
-		"maxworkers": 		{"2"},
+		"maxworkers":       {"2"},
 	}
 )
 
@@ -59,10 +60,10 @@ func InitConfig() error {
 	if err != nil {
 		return err
 	}
-	_,err=strconv.Atoi(configData["maxworkers"][0]) // Check if the string given for the number of maxworkers in the configfile can be converted to int 
-	// Otherwise abort the programme. 
-	if err!=nil{
-		configData["maxworkers"][0]="2" // Reset the value to default 2 in case of Atoi fails
+	_, err = strconv.Atoi(configData["maxworkers"][0]) // Check if the string given for the number of maxworkers in the configfile can be converted to int
+	// Otherwise abort the programme.
+	if err != nil {
+		configData["maxworkers"][0] = "2" // Reset the value to default 2 in case of Atoi fails
 		return err
 	}
 	setTextRenderColors()
