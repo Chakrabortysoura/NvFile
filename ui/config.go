@@ -22,6 +22,7 @@ var (
 		"exit":             {"ctrl+z", "ctrl+q"},
 		"action":           {"enter"},
 		"rename":           {"ctrl+r"},
+		"maxworkers": 		{"2"},
 	}
 )
 
