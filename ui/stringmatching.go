@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"io/fs"
 	"strings"
+	"strconv"
 	"sync"
 )
 
@@ -16,11 +17,13 @@ func highlightMatchedSubstring(target, searchterm string) string {
 
 func startSearch(contents []fs.FileInfo, searchterm string, out chan<- fs.FileInfo){
 	input:=make(chan fs.FileInfo)
-	var workerGrp sync.WaitGroup
-
-	wg.Add(2)
-	go matchstring(input, searchterm, &workerGrp, out) // Spawn a few async worker threads for processing the input fs.Fileinfo entries
-	go matchstring(input, searchterm, &workerGrp, out) 
+	var workerGrp sync.WaitGroup 
+	
+	total,_:=strconv.Atoi(configData["maxworkers"][0]) // Number of maximum go routines to spawn while searching through massive directory entries
+	for i:=1;i<=total;i++{
+		wg.Add(1)
+		go matchstring(input, searchterm, &workerGrp, out) // Spawn a few async worker threads for processing the input fs.Fileinfo entries
+	}
 	
 	for _, fsentries:=range contents{
 		input<- fsentries
