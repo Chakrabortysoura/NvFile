@@ -20,6 +20,7 @@ makedepends=('go') # 'bzr', 'git', 'mercurial' or 'subversion'
 provides=("${pkgname}")
 conflicts=()
 replaces=()
+options=(!debug)
 backup=()
 options=()
 install=
