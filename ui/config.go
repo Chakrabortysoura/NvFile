@@ -59,6 +59,12 @@ func InitConfig() error {
 	if err != nil {
 		return err
 	}
+	_,err=strconv.Atoi(configData["maxworkers"][0]) // Check if the string given for the number of maxworkers in the configfile can be converted to int 
+	// Otherwise abort the programme. 
+	if err!=nil{
+		configData["maxworkers"][0]="2" // Reset the value to default 2 in case of Atoi fails
+		return err
+	}
 	setTextRenderColors()
 	return nil
 }
